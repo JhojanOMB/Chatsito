@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chatsito — Dark Red</title>
+
+  <!-- Tailwind CDN (ok para desarrollo) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4712/4712109.png">
+
+  <style>
+    :root{
+      --bg-1: #0b090a;
+      --bg-2: #120b0c;
+      --accent: #b91c1c; /* red-700 */
+      --accent-2: #7f1d1d; /* darker red */
+    }
+    body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    /* smooth scrollbar */
+    .scrollbar-thin::-webkit-scrollbar { height:8px; width:8px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }
+    .msg-enter { transform: translateY(6px); opacity: 0; transition: all .18s ease; }
+    .msg-enter.show { transform: translateY(0); opacity: 1; }
+    /* subtle glass for inputs */
+    .glass { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(6px); }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-[#050405] via-[#0b0202] to-[#170707] min-h-screen flex items-center justify-center p-4 text-white">
+
+  <div id="chat-app" class="hidden w-full max-w-[980px] h-[88vh] grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- LEFT: USERS / info -->
+    <aside class="col-span-1 bg-[#0f0b0b] rounded-2xl shadow-2xl p-4 flex flex-col gap-4 glass">
+      <div class="flex items-center gap-3">
+        <img id="user-img" class="w-12 h-12 rounded-full object-cover border-2 border-[#2c0808]" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="avatar">
+        <div class="flex-1">
+          <div id="user-name" class="font-semibold text-lg">Usuario</div>
+          <div id="user-status" class="text-xs text-slate-400">offline</div>
+        </div>
+        <div class="flex flex-col items-end">
+          <div id="online-count" class="text-sm text-rose-400 font-medium">0 online</div>
+          <button id="config-btn" title="Configuración" class="mt-1 p-2 rounded-full hover:bg-[#2a0b0b]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="text-rose-300"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 0 1 2.27 16.9l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.67 0 1.22-.41 1.51-1a1.65 1.65 0 0 0-.33-1.82L4.31 4.3A2 2 0 0 1 7.14 1.47l.06.06a1.65 1.65 0 0 0 1.82.33h.09c.58-.24 1.22-.24 1.8 0h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 0 1 17.69 4.3l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09c.24.58.24 1.22 0 1.8v.09c.24.58.24 1.22 0 1.8v.09c.67 0 1.22.41 1.51 1a1.65 1.65 0 0 0 .33 1.82z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <input id="search" placeholder="Buscar usuarios o mensajes" class="w-full bg-[#0b0b0b] text-sm rounded-full px-3 py-2 outline-none placeholder:text-slate-500 glass">
+      </div>
+
+      <div>
+        <h4 class="text-xs text-slate-300 mb-2">Usuarios activos</h4>
+        <div id="presence-list" class="flex flex-col gap-2 max-h-[48vh] overflow-auto pr-2 scrollbar-thin"></div>
+      </div>
+
+      <div class="mt-auto text-xs text-slate-400">Chatsito • Estilo oscuro • Beta</div>
+    </aside>
+
+    <!-- RIGHT: Chat -->
+    <main class="col-span-2 bg-[#0a0707] rounded-2xl shadow-2xl flex flex-col overflow-hidden glass">
+
+      <!-- header -->
+      <div class="flex items-center gap-4 p-4 border-b border-[#260505]">
+        <div class="flex-1">
+          <div id="chat-title" class="font-semibold text-lg">Sala pública</div>
+          <div id="typing" class="text-xs text-rose-400 mt-1"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400 mr-2">Realtime</span>
+        </div>
+      </div>
+
+      <!-- messages -->
+      <div id="chat-box" class="flex-1 overflow-auto p-6 space-y-3 scrollbar-thin" style="background: linear-gradient(180deg, rgba(13,6,6,0.6), rgba(7,2,2,0.35));">
+        <!-- mensajes se insertan aquí -->
+      </div>
+
+      <!-- composer -->
+      <div class="p-4 border-t border-[#260505] flex items-center gap-3">
+        <button id="upload-btn" title="Adjuntar" class="rounded-full bg-[#1b0b0b] p-2 hover:bg-[#2a0b0b]">
+          📎
+        </button>
+        <input id="image-file" type="file" accept="image/*" class="hidden">
+        <input id="message" autocomplete="off" placeholder="Escribe un mensaje..." class="flex-1 bg-[#0b0b0b] rounded-full px-4 py-2 outline-none text-slate-100 glass">
+        <button id="emoji-btn" class="text-2xl">😊</button>
+        <button id="send-btn" class="bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2 rounded-full hover:from-rose-700 hover:to-rose-600 shadow">
+          <span class="font-semibold">Enviar</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- EMOJI PICKER (web component) -->
+  <emoji-picker id="emoji-picker" class="hidden fixed right-8 bottom-32 z-40"></emoji-picker>
+
+    <!-- LOGIN (solo nombre + clave) -->
+    <div id="name-modal" class="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
+    <div class="bg-[#120909] rounded-xl p-6 w-80">
+        <h3 class="text-lg font-semibold text-rose-300 text-center mb-3">Entrar a Chatsito</h3>
+
+        <label class="text-xs text-slate-400">Nombre</label>
+        <input id="name-input" placeholder="Tu nombre (ej. Jhojan)" class="w-full mb-2 p-2 rounded bg-[#0b0b0b] outline-none text-white">
+
+        <label class="text-xs text-slate-400">Clave</label>
+        <input id="pass-input" type="password" placeholder="Clave que te doy" class="w-full mb-4 p-2 rounded bg-[#0b0b0b] outline-none text-white">
+
+        <div class="flex gap-2">
+        <button id="login-btn" class="flex-1 bg-rose-600 py-2 rounded hover:bg-rose-700" title="Entrar con nombre y clave">Entrar</button>
+        <button id="logout-temp" class="flex-1 bg-slate-700 py-2 rounded hover:bg-slate-600" style="visibility:hidden">—</button>
+        </div>
+    </div>
+    </div>
+
+  <!-- CONFIG MODAL -->
+  <div id="config-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+    <div class="bg-[#120909] rounded-xl w-[92%] max-w-md p-5">
+      <div class="flex items-center gap-4 mb-4">
+        <img id="config-avatar" class="w-14 h-14 rounded-full border" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+        <div class="flex-1">
+          <div id="config-name" class="font-semibold text-white">Usuario</div>
+          <div class="text-sm text-slate-400">Editar perfil</div>
+        </div>
+        <button id="close-config" class="text-slate-300">✖</button>
+      </div>
+
+      <label class="block text-slate-300 text-sm mb-1">Nombre</label>
+      <input id="config-name-input" class="w-full mb-3 p-2 rounded bg-[#0b0b0b] outline-none text-white">
+
+      <label class="block text-slate-300 text-sm mb-1">Avatar</label>
+      <input id="config-avatar-input" type="file" accept="image/*" class="w-full mb-3">
+
+      <div class="flex gap-2">
+        <button id="save-config" class="flex-1 bg-rose-600 py-2 rounded hover:bg-rose-700">Guardar</button>
+        <button id="logout" class="flex-1 bg-slate-700 py-2 rounded hover:bg-slate-600">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- script app -->
+  <script type="module" src="./js/chat.js"></script>
+</body>
+</html>

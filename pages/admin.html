@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Admin — Chatsito</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-900 text-white p-6">
+
+<h1 class="text-3xl mb-6">Panel Admin — Chatsito</h1>
+
+<div class="grid grid-cols-3 gap-6">
+
+<!-- USUARIOS -->
+<div class="bg-slate-800 p-4 rounded">
+
+<h2 class="text-xl mb-3">Usuarios</h2>
+
+<div class="flex gap-2 mb-3">
+<input id="new-name" placeholder="nombre" class="text-black px-2 py-1 rounded w-full">
+<input id="new-pass" placeholder="clave" class="text-black px-2 py-1 rounded w-full">
+<button id="create-user" class="bg-green-600 px-3 py-1 rounded">Crear</button>
+</div>
+
+<div id="admin-users" class="space-y-2 max-h-[60vh] overflow-auto"></div>
+
+</div>
+
+
+<!-- ONLINE -->
+<div class="bg-slate-800 p-4 rounded">
+
+<h2 class="text-xl mb-3">Usuarios Online</h2>
+
+<div id="admin-presence" class="space-y-2 max-h-[60vh] overflow-auto"></div>
+
+</div>
+
+
+<!-- MENSAJES -->
+<div class="bg-slate-800 p-4 rounded">
+
+<h2 class="text-xl mb-3">Mensajes</h2>
+
+<div id="admin-messages" class="space-y-2 max-h-[60vh] overflow-auto"></div>
+
+</div>
+
+</div>
+
+<script type="module" src="../js/admin.js"></script>
+
+</body>
+</html>
