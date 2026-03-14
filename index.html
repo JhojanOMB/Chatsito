@@ -11,7 +11,7 @@
   <!-- Fuente -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4712/4712109.png">
+  <link rel="icon" href="./img/JOMBY FOXO Cabeza.png" type="image/png">
 
   <style>
     :root{
@@ -99,23 +99,61 @@
   <!-- EMOJI PICKER (web component) -->
   <emoji-picker id="emoji-picker" class="hidden fixed right-8 bottom-32 z-40"></emoji-picker>
 
-    <!-- LOGIN (solo nombre + clave) -->
-    <div id="name-modal" class="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
-    <div class="bg-[#120909] rounded-xl p-6 w-80">
-        <h3 class="text-lg font-semibold text-rose-300 text-center mb-3">Entrar a Chatsito</h3>
+<!-- LOGIN (nombre + clave con mascota protagonista) -->
+<div id="name-modal" class="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
+  <div class="bg-[#120909] rounded-2xl shadow-2xl p-8 w-[95%] max-w-2xl">
+    
+    <!-- Título -->
+    <h3 class="text-2xl font-bold text-rose-400 text-center mb-8 tracking-wide">
+      Bienvenido al Chatsito
+    </h3>
 
-        <label class="text-xs text-slate-400">Nombre</label>
-        <input id="name-input" placeholder="Tu super nombre" class="w-full mb-2 p-2 rounded bg-[#0b0b0b] outline-none text-white">
-
-        <label class="text-xs text-slate-400">Clave</label>
-        <input id="pass-input" type="password" placeholder="Clave que te di" class="w-full mb-4 p-2 rounded bg-[#0b0b0b] outline-none text-white">
-
-        <div class="flex gap-2">
-        <button id="login-btn" class="flex-1 bg-rose-600 py-2 rounded hover:bg-rose-700" title="Entrar con nombre y clave">Entrar</button>
-        <button id="logout-temp" class="flex-1 bg-slate-700 py-2 rounded hover:bg-slate-600" style="visibility:hidden">—</button>
+    <!-- Contenido en dos columnas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+      
+      <!-- Columna izquierda: mascota -->
+      <div class="flex justify-center">
+        <img src="./img/Saludito.png"  
+             alt="Mascota"  
+             class="w-56 h-auto drop-shadow-lg">
+      </div>
+      
+      <!-- Columna derecha: formulario -->
+      <div class="flex flex-col gap-4">
+        
+        <!-- Nombre -->
+        <div class="flex items-center bg-[#1a0d0d] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-rose-500 transition">
+          <svg class="w-5 h-5 text-rose-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M5.121 17.804A9 9 0 1118.879 6.196 9 9 0 015.121 17.804z"/>
+          </svg>
+          <input id="name-input" placeholder="Tu super nombre"  
+                 class="flex-1 bg-transparent outline-none text-white placeholder:text-slate-500">
         </div>
+
+        <!-- Clave -->
+        <div class="flex items-center bg-[#1a0d0d] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-rose-500 transition">
+          <svg class="w-5 h-5 text-rose-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11s1.343 3 3 3 3-1.343 3-3z"/>
+            <path d="M12 11v10m0-10h10"/>
+          </svg>
+          <input id="pass-input" type="password" placeholder="Clave que te di"  
+                 class="flex-1 bg-transparent outline-none text-white placeholder:text-slate-500">
+        </div>
+
+        <!-- Botones -->
+        <div class="flex gap-3 mt-2">
+          <button id="login-btn"  
+                  class="flex-1 bg-gradient-to-r from-rose-600 to-rose-500 py-2 rounded-lg font-semibold hover:from-rose-700 hover:to-rose-600 transition shadow-lg">
+            Entrar
+          </button>
+          <button id="logout-temp"  
+                  class="flex-1 bg-slate-700 py-2 rounded-lg hover:bg-slate-600 transition" 
+                  style="visibility:hidden">—</button>
+        </div>
+      </div>
     </div>
-    </div>
+  </div>
+</div>
 
   <!-- CONFIG MODAL -->
   <div id="config-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
