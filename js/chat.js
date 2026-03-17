@@ -33,6 +33,8 @@ const firebaseConfig = {
   appId: "1:659126906398:web:f32dd5e72d1778f5ee880f"
 };
 
+tryAutoLogin();
+
 /* =======================
    Inicialización Firebase — IMPORTANTE: debe ejecutarse antes de usar db/storage
    ======================= */
@@ -81,6 +83,10 @@ const configNameInput = $("config-name-input");
 const configAvatarInput = $("config-avatar-input");
 const configAvatarPreview = $("config-avatar");
 
+const emojiBtn = $("emoji-btn");
+const emojiPicker = $("emoji-picker");
+const userStatusUI = $("user-status");
+
 /* =======================
    ESTADO LOCAL
    ======================= */
@@ -105,6 +111,41 @@ let pendingImageFile = null;
 const fmtTime = (ts) => { try { if (!ts) return ""; const d = ts?.toDate ? ts.toDate() : new Date(ts); return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
 function sysNotice(text) { const n = document.createElement("div"); n.className = "text-center text-rose-300 text-sm my-2"; n.textContent = text; chatBox && chatBox.appendChild(n); chatBox && (chatBox.scrollTop = chatBox.scrollHeight); }
 function safeLower(s){ return (typeof s === "string") ? s.toLowerCase() : ""; }
+function showSpecialGreeting() {
+  if (!profile?.nombre) return;
+  const normalized = profile.nombre.trim().toLowerCase();
+  if (normalized === "daniela" || normalized.includes("daniela")) {
+    const text = "Hola Bonitaa Animo ❤️‍🔥";
+    sysNotice(text);
+    showFloatingAlert(text);
+  }
+}
+
+function showFloatingAlert(message) {
+  const existing = document.getElementById("special-greeting-alert");
+  if (existing) existing.remove();
+
+  const alertEl = document.createElement("div");
+  alertEl.id = "special-greeting-alert";
+  alertEl.className = "floating-alert";
+  alertEl.textContent = message;
+  document.body.appendChild(alertEl);
+
+  window.requestAnimationFrame(() => {
+    alertEl.classList.add("floating-alert--show");
+  });
+
+  setTimeout(() => {
+    alertEl.classList.remove("floating-alert--show");
+    setTimeout(() => {
+      alertEl.remove();
+    }, 500);
+  }, 3200);
+}
+
+function setUserStatusOnline() {
+  if (userStatusUI) userStatusUI.textContent = "online";
+}
 
 /* =======================
    CARGAR PERFIL LOCAL (si hay)
@@ -118,48 +159,103 @@ function loadLocal() {
 }
 loadLocal();
 
+async function tryAutoLogin() {
+  const uidDoc = localStorage.getItem("chatsito_uidDoc");
+  if (!uidDoc) return;
+
+  try {
+    const ref = doc(db, "usuarios", uidDoc);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+
+    profile = {
+      nombre: data.nombre,
+      isAdmin: !!data.isAdmin,
+      avatar: data.avatar || null,
+      uidDoc: uidDoc
+    };
+
+    userNameUI.textContent = profile.nombre;
+
+    if (profile.avatar) {
+      avatarUrlLocal = profile.avatar;
+      userImgUI.src = profile.avatar;
+    }
+
+    nameModal.style.display = "none";
+
+    initAfterLogin();
+
+  } catch (err) {
+    console.error("AutoLogin error:", err);
+  }
+}
+
 /* =======================
    LOGIN: buscar en colección 'usuarios' por nombre+clave
    ======================= */
 async function loginWithNameClave() {
-  // diagnóstico rápido: ¿db existe?
-  if (typeof db === "undefined" || db === null) {
-    console.error("loginWithNameClave: Firestore 'db' NO está inicializado. Comprueba errores previos en consola y que 'const db = getFirestore(app)' esté presente.");
-    alert("Error interno: Firestore no inicializado. Revisa la consola del navegador.");
+  if (!db) {
+    alert("Error interno: Firestore no inicializado.");
     return;
   }
 
   const n = (nameInput?.value || "").trim();
   const p = (passInput?.value || "").trim();
-  if (!n || !p) { alert("Ingresa nombre y clave"); return; }
+
+  if (!n || !p) {
+    alert("Ingresa nombre y clave");
+    return;
+  }
 
   try {
     const usuariosRef = collection(db, "usuarios");
-    // Normaliza nombre si prefieres case-insensitive: where("nombreLower","==", n.toLowerCase())
-    const q = query(usuariosRef, where("nombre", "==", n), where("clave", "==", p));
+    const q = query(
+      usuariosRef,
+      where("nombre", "==", n),
+      where("clave", "==", p)
+    );
+
     const snap = await getDocs(q);
+
     if (snap.empty) {
       alert("Nombre o clave incorrectos.");
       return;
     }
+
     const docSnap = snap.docs[0];
     const data = docSnap.data();
+
     profile = {
       nombre: data.nombre,
-      clave: data.clave,
       isAdmin: !!data.isAdmin,
       avatar: data.avatar || null,
       uidDoc: docSnap.id
     };
-    // guardar nombre local para next time (no guardar clave)
+
+    // GUARDAR SESIÓN
+    localStorage.setItem("chatsito_uidDoc", docSnap.id);
     localStorage.setItem(LS_NAME, profile.nombre);
-    if (profile.avatar) { avatarUrlLocal = profile.avatar; localStorage.setItem(LS_AVATAR, avatarUrlLocal); if (userImgUI) userImgUI.src = avatarUrlLocal; }
-    if (userNameUI) userNameUI.textContent = profile.nombre;
-    if (nameModal) nameModal.style.display = "none";
+
+    if (profile.avatar) {
+      avatarUrlLocal = profile.avatar;
+      localStorage.setItem(LS_AVATAR, avatarUrlLocal);
+    }
+
+    // UI
+    userNameUI.textContent = profile.nombre;
+    if (avatarUrlLocal) userImgUI.src = avatarUrlLocal;
+
+    nameModal.style.display = "none";
+
     initAfterLogin();
+
   } catch (err) {
-    console.error("login error (detallado):", err);
-    alert("Error al iniciar sesión. Mira la consola para más detalles.");
+    console.error(err);
+    alert("Error al iniciar sesión");
   }
 }
 
@@ -171,11 +267,15 @@ loginBtn && loginBtn.addEventListener("click", loginWithNameClave);
 function initAfterLogin(){
   if (chatApp && chatApp.classList && chatApp.classList.contains("hidden")) chatApp.classList.remove("hidden");
   if (avatarUrlLocal && userImgUI) userImgUI.src = avatarUrlLocal;
+  setUserStatusOnline();
   startPresence();
   listenPresence();
   listenTyping();
   listenMessages();
   bindUI();
+
+  // Mensaje especial para Daniela
+  showSpecialGreeting();
 }
 
 /* =======================
@@ -209,9 +309,10 @@ function listenPresence(){
     const active = arr.filter(p => (now - (p.lastSeenClient || 0) < PRESENCE_TTL) && p.online);
     active.sort((a,b) => (b.lastSeenClient||0)-(a.lastSeenClient||0));
     active.forEach(p => {
+      const isMe = p.uidLocal === (profile?.uidDoc || uidLocal);
       const row = document.createElement("div");
       row.className = "flex items-center gap-3 p-2 rounded hover:bg-[#170909]";
-      row.innerHTML = `<img src="${p.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="w-8 h-8 rounded-full"><div><div class="text-sm font-medium">${p.nombre}</div><div class="text-xs text-slate-400">online</div></div>`;
+      row.innerHTML = `<img src="${p.avatar || '../img/sin-hogar.png'}" class="w-8 h-8 rounded-full"><div><div class="text-sm font-medium">${p.nombre}${isMe ? ' (Tú)' : ''}</div><div class="text-xs text-slate-400">online</div></div>`;
       presenceList.appendChild(row);
     });
     onlineCountEl && (onlineCountEl.textContent = `${active.length} online`);
@@ -302,6 +403,27 @@ if (uploadMsgBtn && imageFileInput) {
   uploadMsgBtn.addEventListener("click", ()=> imageFileInput.click());
   imageFileInput.addEventListener("change", (e)=> { pendingImageFile = e.target.files?.[0] || null; if (messageInput) messageInput.placeholder = pendingImageFile ? `Imagen lista: ${pendingImageFile.name}` : "Escribe un mensaje..."; });
 }
+
+if (emojiBtn && emojiPicker && messageInput) {
+  emojiBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    emojiPicker.classList.toggle("hidden");
+  });
+
+  emojiPicker.addEventListener("emoji-click", (event) => {
+    const emoji = event.detail?.unicode || event.detail?.emoji;
+    if (!emoji) return;
+    messageInput.value += emoji;
+    messageInput.focus();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!emojiPicker.contains(event.target) && event.target !== emojiBtn) {
+      emojiPicker.classList.add("hidden");
+    }
+  });
+}
+
 async function uploadImageAndGetURL(file) {
   if (!file) return null;
   if (typeof storage === "undefined" || storage === null) {
@@ -384,7 +506,7 @@ function renderLocal(tempId, payload) {
   wrap.id = tempId;
   wrap.className = `flex gap-3 items-end ${isMine ? "justify-end" : "justify-start"} opacity-80`;
   const bubble = document.createElement("div");
-  bubble.className = `max-w-[78%] p-3 rounded-2xl shadow ${isMine ? "bg-rose-600 text-white" : "bg-[#140909] text-white"}`;
+  bubble.className = `max-w-[78%] p-3 rounded-2xl shadow ${isMine ? "bg-red-900 text-white" : "bg-[#140909] text-white"}`;
   const header = document.createElement("div"); header.className = "text-xs opacity-80 mb-1";
   header.innerHTML = `<strong>${payload.usuario}</strong> <span class="text-[10px] opacity-60 ml-2">${fmtTime(payload.createdAtClient)}</span> <span class="text-[10px] italic ml-2">(enviando)</span>`;
   const content = document.createElement("div");
@@ -402,7 +524,7 @@ function renderServerMessage(id, data) {
   const wrapper = document.createElement("div");
   wrapper.className = `flex gap-3 items-end ${isMine ? "justify-end" : "justify-start"}`;
   const bubble = document.createElement("div");
-  bubble.className = `max-w-[78%] p-3 rounded-2xl shadow ${isMine ? "bg-rose-600 text-white" : "bg-[#140909] text-white"}`;
+  bubble.className = `max-w-[78%] p-3 rounded-2xl shadow ${isMine ? "bg-red-900 text-white" : "bg-[#140909] text-white"}`;
 
   if (data.deleted) {
     if (profile?.isAdmin) {
@@ -455,7 +577,7 @@ function renderServerMessage(id, data) {
   }
 
   if (!isMine) {
-    const av = document.createElement("img"); av.src = data.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; av.className = 'w-8 h-8 rounded-full';
+    const av = document.createElement("img"); av.src = data.avatar || '../img/sin-hogar.png'; av.className = 'w-8 h-8 rounded-full';
     wrapper.appendChild(av); wrapper.appendChild(bubble);
   } else wrapper.appendChild(bubble);
 

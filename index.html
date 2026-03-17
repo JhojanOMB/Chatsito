@@ -3,175 +3,155 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chatsito — Dark Red</title>
+  <title>Chatsito — Dark Red (mejorado)</title>
 
-  <!-- Tailwind CDN (ok para desarrollo) -->
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
   <!-- Fuente -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
 
   <link rel="icon" href="./img/JOMBY FOXO Cabeza.png" type="image/png">
-
   <style>
-    :root{
-      --bg-1: #0b090a;
-      --bg-2: #120b0c;
-      --accent: #b91c1c; /* red-700 */
-      --accent-2: #7f1d1d; /* darker red */
-    }
-    body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-    /* smooth scrollbar */
-    .scrollbar-thin::-webkit-scrollbar { height:8px; width:8px; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }
-    .msg-enter { transform: translateY(6px); opacity: 0; transition: all .18s ease; }
-    .msg-enter.show { transform: translateY(0); opacity: 1; }
-    /* subtle glass for inputs */
-    .glass { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(6px); }
+    :root{--bg-1:#050405; --bg-2:#0b0202; --bg-3:#170707;}
+    html,body,#root{height:100%}
+    body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    .scrollbar-thin::-webkit-scrollbar{width:8px;height:8px}
+    .scrollbar-thin::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:8px}
+    .floating-alert{position:fixed;top:1.15rem;right:1.15rem;z-index:9999;max-width:340px;padding:.9rem 1.1rem;background:linear-gradient(180deg, rgba(255,255,255,0.17), rgba(255,255,255,0.08));border:1px solid rgba(255,255,255,.18);border-radius:1rem;box-shadow:0 16px 35px rgba(0,0,0,.35);color:#fff;font-weight:700;backdrop-filter:blur(10px);opacity:0;transform:translateY(-10px) scale(0.95);transition:opacity .35s,transform .35s,box-shadow .35s;pointer-events:none;text-align:center;line-height:1.4;font-size:0.95rem;}
+    .floating-alert--show,.floating-alert-visible{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+    .floating-alert--show{box-shadow:0 18px 40px rgba(220,50,90,.45);}
+    .glass{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+    #name-modal > div { border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: 0 20px 40px rgba(0,0,0,.55); }
+    #name-modal h3 { letter-spacing: 0.04em; text-shadow: 0 2px 12px rgba(255, 40, 100, .5); }
+    #name-modal input { background: rgba(20, 10, 10, 0.85); border-color: rgba(255, 255, 255, 0.2); }
+    #login-btn { border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 20px rgba(232, 63, 122, 0.35); }
+
   </style>
 </head>
 
-<body class="bg-gradient-to-br from-[#050405] via-[#0b0202] to-[#170707] min-h-screen flex items-center justify-center p-4 text-white">
+<body class="bg-gradient-to-br from-[var(--bg-1)] via-[var(--bg-2)] to-[var(--bg-3)] min-h-screen text-white">
 
-  <div id="chat-app" class="hidden w-full max-w-[980px] h-[88vh] grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- LEFT: USERS / info -->
-    <aside class="col-span-1 bg-[#0f0b0b] rounded-2xl shadow-2xl p-4 flex flex-col gap-4 glass">
-      <div class="flex items-center gap-3">
-        <img id="user-img" class="w-12 h-12 rounded-full object-cover border-2 border-[#2c0808]" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="avatar">
-        <div class="flex-1">
-          <div id="user-name" class="font-semibold text-lg">Usuario</div>
-          <div id="user-status" class="text-xs text-slate-400">offline</div>
+  <div id="root" class="h-full flex items-center justify-center p-4">
+    <div id="chat-app" class="w-full max-w-[1100px] h-full grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- SIDEBAR -->
+      <aside id="sidebar"
+             class="col-span-1 bg-[#0f0b0b] rounded-2xl shadow-2xl p-4 flex flex-col gap-4 md:static md:translate-x-0 fixed inset-y-0 left-0 z-40 w-[86%] max-w-xs transform -translate-x-full transition-transform duration-200 ease-in-out">
+        <div class="flex items-center gap-3">
+          <img id="user-img" class="w-12 h-12 rounded-full object-cover border-2 border-[#2c0808]" src="./img/sin-hogar.png" alt="avatar">
+          <div class="flex-1 min-w-0">
+            <div id="user-name" class="font-semibold text-lg truncate">Usuario</div>
+            <div id="user-status" class="text-xs text-slate-400 truncate">offline</div>
+          </div>
+          <div class="flex flex-col items-end">
+            <div id="online-count" class="text-sm text-rose-400 font-medium">0 online</div>
+            <button id="config-btn" aria-label="Configuración" title="Configuración" class="mt-1 p-2 rounded-full hover:bg-[#2a0b0b]">
+              <i class="fa-solid fa-gear text-rose-300"></i>
+            </button>
+          </div>
         </div>
-        <div class="flex flex-col items-end">
-          <div id="online-count" class="text-sm text-rose-400 font-medium">0 online</div>
-          <button id="config-btn" title="Configuración" class="mt-1 p-2 rounded-full hover:bg-[#2a0b0b]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="text-rose-300"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 0 1 2.27 16.9l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.67 0 1.22-.41 1.51-1a1.65 1.65 0 0 0-.33-1.82L4.31 4.3A2 2 0 0 1 7.14 1.47l.06.06a1.65 1.65 0 0 0 1.82.33h.09c.58-.24 1.22-.24 1.8 0h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 0 1 17.69 4.3l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09c.24.58.24 1.22 0 1.8v.09c.24.58.24 1.22 0 1.8v.09c.67 0 1.22.41 1.51 1a1.65 1.65 0 0 0 .33 1.82z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+
+        <div>
+          <input id="search" type="search" placeholder="Buscar usuarios o mensajes" class="w-full bg-[#0b0b0b] text-sm rounded-full px-3 py-2 outline-none placeholder:text-slate-500">
+        </div>
+
+        <div class="flex-1 overflow-auto pr-2 mt-1 scrollbar-thin">
+          <h4 class="text-xs text-slate-300 mb-2">Usuarios activos</h4>
+          <div id="presence-list" class="flex flex-col gap-2"></div>
+        </div>
+
+        <div class="md:hidden">
+          <button id="close-sidebar" class="w-full py-2 rounded-full bg-slate-700">Cerrar</button>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="col-span-2 bg-[#0a0707] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+
+        <!-- header -->
+        <div class="flex items-center gap-3 p-3 border-b border-[#260505]">
+          <div class="md:hidden">
+            <button id="open-sidebar" aria-label="Abrir menú" class="p-2 rounded-md bg-transparent hover:bg-[#120909]">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+          </div>
+
+          <div class="flex-1">
+            <div id="typing" class="text-xs text-rose-400"></div>
+          </div>
+        </div>
+
+        <!-- messages -->
+        <div id="chat-box" class="flex-1 overflow-auto p-4 md:p-6 space-y-3 scrollbar-thin bg-gradient-to-b from-[#0d0606]/60 to-[#070202]/35">
+        </div>
+
+        <!-- composer -->
+        <div class="p-3 md:p-4 border-t border-[#260505] flex items-center gap-2 md:gap-3">
+          <button id="upload-btn" aria-label="Adjuntar" title="Adjuntar" class="rounded-full bg-[#1b0b0b] p-2 hover:bg-[#2a0b0b]">
+            <i class="fa-solid fa-paperclip"></i>
+          </button>
+          <input id="image-file" type="file" accept="image/*" class="hidden">
+          <input id="message" autocomplete="off" placeholder="Escribe un mensaje..." class="flex-1 bg-[#0b0b0b] rounded-full px-3 md:px-4 py-2 outline-none text-slate-100 text-sm md:text-base" />
+          <button id="emoji-btn" aria-label="Emojis" class="text-xl md:text-2xl">😊</button>
+          <button id="send-btn" class="bg-gradient-to-r from-rose-600 to-rose-500 px-3 md:px-4 py-2 rounded-full hover:from-rose-700 hover:to-rose-600 shadow text-sm md:text-base font-semibold">
+            Enviar
           </button>
         </div>
-      </div>
+      </main>
 
-      <div>
-        <input id="search" placeholder="Buscar usuarios o mensajes" class="w-full bg-[#0b0b0b] text-sm rounded-full px-3 py-2 outline-none placeholder:text-slate-500 glass">
-      </div>
-
-      <div>
-        <h4 class="text-xs text-slate-300 mb-2">Usuarios activos</h4>
-        <div id="presence-list" class="flex flex-col gap-2 max-h-[48vh] overflow-auto pr-2 scrollbar-thin"></div>
-      </div>
-
-      <div class="mt-auto text-xs text-slate-400">Hola mi gente</div>
-    </aside>
-
-    <!-- RIGHT: Chat -->
-    <main class="col-span-2 bg-[#0a0707] rounded-2xl shadow-2xl flex flex-col overflow-hidden glass">
-
-      <!-- header -->
-      <div class="flex items-center gap-4 p-4 border-b border-[#260505]">
-        <div class="flex-1">
-          <div id="chat-title" class="font-semibold text-lg">Sala pública</div>
-          <div id="typing" class="text-xs text-rose-400 mt-1"></div>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-slate-400 mr-2">Realtime</span>
-        </div>
-      </div>
-
-      <!-- messages -->
-      <div id="chat-box" class="flex-1 overflow-auto p-6 space-y-3 scrollbar-thin" style="background: linear-gradient(180deg, rgba(13,6,6,0.6), rgba(7,2,2,0.35));">
-        <!-- mensajes se insertan aquí -->
-      </div>
-
-      <!-- composer -->
-      <div class="p-4 border-t border-[#260505] flex items-center gap-3">
-        <button id="upload-btn" title="Adjuntar" class="rounded-full bg-[#1b0b0b] p-2 hover:bg-[#2a0b0b]">
-          📎
-        </button>
-        <input id="image-file" type="file" accept="image/*" class="hidden">
-        <input id="message" autocomplete="off" placeholder="Escribe un mensaje..." class="flex-1 bg-[#0b0b0b] rounded-full px-4 py-2 outline-none text-slate-100 glass">
-        <button id="emoji-btn" class="text-2xl">😊</button>
-        <button id="send-btn" class="bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2 rounded-full hover:from-rose-700 hover:to-rose-600 shadow">
-          <span class="font-semibold">Enviar</span>
-        </button>
-      </div>
-    </main>
+    </div>
   </div>
 
-  <!-- EMOJI PICKER (web component) -->
-  <emoji-picker id="emoji-picker" class="hidden fixed right-8 bottom-32 z-40"></emoji-picker>
-
-<!-- LOGIN (nombre + clave con mascota protagonista) -->
-<div id="name-modal" class="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
-  <div class="bg-[#120909] rounded-2xl shadow-2xl p-8 w-[95%] max-w-2xl">
-    
-    <!-- Título -->
-    <h3 class="text-2xl font-bold text-rose-400 text-center mb-8 tracking-wide">
-      Bienvenido al Chatsito
-    </h3>
-
-    <!-- Contenido en dos columnas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-      
-      <!-- Columna izquierda: mascota -->
-      <div class="flex justify-center">
-        <img src="./img/Saludito.png"  
-             alt="Mascota"  
-             class="w-56 h-auto drop-shadow-lg">
+  <!-- name modal -->
+  <div id="name-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-[#120909] to-[#1a0d0d] rounded-3xl shadow-2xl p-6 w-[95%] max-w-2xl border border-rose-900/30">
+      <div class="text-center mb-6">
+        <h3 class="text-2xl md:text-3xl font-extrabold text-rose-400">Hola Machi</h3>
       </div>
-      
-      <!-- Columna derecha: formulario -->
-      <div class="flex flex-col gap-4">
-        
-        <!-- Nombre -->
-        <div class="flex items-center bg-[#1a0d0d] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-rose-500 transition">
-          <svg class="w-5 h-5 text-rose-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M5.121 17.804A9 9 0 1118.879 6.196 9 9 0 015.121 17.804z"/>
-          </svg>
-          <input id="name-input" placeholder="Tu super nombre"  
-                 class="flex-1 bg-transparent outline-none text-white placeholder:text-slate-500">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div class="flex justify-center">
+          <img src="./img/Saludito.png" alt="Mascota" class="w-40 md:w-60 drop-shadow-[0_10px_25px_rgba(244,63,94,0.4)]" />
         </div>
 
-        <!-- Clave -->
-        <div class="flex items-center bg-[#1a0d0d] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-rose-500 transition">
-          <svg class="w-5 h-5 text-rose-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11s1.343 3 3 3 3-1.343 3-3z"/>
-            <path d="M12 11v10m0-10h10"/>
-          </svg>
-          <input id="pass-input" type="password" placeholder="Clave que te di"  
-                 class="flex-1 bg-transparent outline-none text-white placeholder:text-slate-500">
-        </div>
+        <div class="flex flex-col gap-4 md:gap-5">
+          <div class="relative">
+            <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-rose-400"></i>
+            <input id="name-input" placeholder="Tu super nombre" class="w-full pl-10 pr-3 py-2 rounded-xl bg-[#1a0d0d]/80 border border-rose-900/40 text-white outline-none" />
+          </div>
 
-        <!-- Botones -->
-        <div class="flex gap-3 mt-2">
-          <button id="login-btn"  
-                  class="flex-1 bg-gradient-to-r from-rose-600 to-rose-500 py-2 rounded-lg font-semibold hover:from-rose-700 hover:to-rose-600 transition shadow-lg">
-            Entrar
-          </button>
-          <button id="logout-temp"  
-                  class="flex-1 bg-slate-700 py-2 rounded-lg hover:bg-slate-600 transition" 
-                  style="visibility:hidden">—</button>
+          <div class="relative">
+            <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-rose-400"></i>
+            <input id="pass-input" type="password" placeholder="Clave que te di" class="w-full pl-10 pr-3 py-2 rounded-xl bg-[#1a0d0d]/80 border border-rose-900/40 text-white outline-none" />
+          </div>
+
+          <button id="login-btn" class="w-full py-2 md:py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 active:scale-95 transition shadow-lg">Entrar</button>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-  <!-- CONFIG MODAL -->
+  <!-- config modal -->
   <div id="config-modal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
     <div class="bg-[#120909] rounded-xl w-[92%] max-w-md p-5">
       <div class="flex items-center gap-4 mb-4">
-        <img id="config-avatar" class="w-14 h-14 rounded-full border" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+        <img id="config-avatar" class="w-14 h-14 rounded-full border" src="./img/sin-hogar.png" alt="avatar">
         <div class="flex-1">
           <div id="config-name" class="font-semibold text-white">Usuario</div>
           <div class="text-sm text-slate-400">Editar perfil</div>
         </div>
-        <button id="close-config" class="text-slate-300">✖</button>
+        <button id="close-config" aria-label="Cerrar configuración" class="text-slate-300">✖</button>
       </div>
 
       <label class="block text-slate-300 text-sm mb-1">Nombre</label>
-      <input id="config-name-input" class="w-full mb-3 p-2 rounded bg-[#0b0b0b] outline-none text-white">
+      <input id="config-name-input" class="w-full mb-3 p-2 rounded bg-[#0b0b0b] outline-none text-white" />
 
       <label class="block text-slate-300 text-sm mb-1">Avatar</label>
-      <input id="config-avatar-input" type="file" accept="image/*" class="w-full mb-3">
+      <input id="config-avatar-input" type="file" accept="image/*" class="w-full mb-3" />
 
       <div class="flex gap-2">
         <button id="save-config" class="flex-1 bg-rose-600 py-2 rounded hover:bg-rose-700">Guardar</button>
@@ -180,7 +160,13 @@
     </div>
   </div>
 
-  <!-- script app -->
+  <!-- emoji picker -->
+  <emoji-picker id="emoji-picker" class="hidden fixed right-4 md:right-8 bottom-24 md:bottom-32 z-50"></emoji-picker>
+
+  <!-- emoji webcomponent -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+
+  <!-- main app script (external) -->
   <script type="module" src="./js/chat.js"></script>
 </body>
 </html>
